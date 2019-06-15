@@ -93,4 +93,25 @@ def to_tensor(ndarray):
     return torch.from_numpy(ndarray)
 
 
+def compute_thresholds_ROC(test_labels, prob_vector, weights=None):
+    """
+    Computes ROC curve for each class and from the ROC curve the Younden's J statistic
+    to find the optimal threshold per class.
 
+    Args:
+        test_labels (TYPE): Description
+        prob_vector (TYPE): Description
+        weights (None, optional): Description
+
+    Returns:
+        TYPE: Description
+    """
+    import numpy as np
+    from sklearn.metrics import roc_curve, auc
+    fpr, tpr, thresholds = roc_curve(test_labels, prob_vector, drop_intermediate=True)
+    # roc_auc = auc(fpr, tpr)
+    # Compute optimal threshold per class (Younden index)
+    # Maximize the sum: sentivity + specificity = tpr + 1 - fpr
+    ratios = -fpr + tpr + 1
+    younden_index = np.argmax(ratios)
+    return thresholds[younden_index]

@@ -87,7 +87,23 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
 
 def plot_training(clf, x, y):
 
-    title = "LASER Learning curves for SemEval2016"
+    title = "LASER Learning curves"
     plt = plot_learning_curve(clf, title, x, y,
                               ylim=(0.4, 1.01), cv=None, n_jobs=6)
+    plt.show()
+
+
+def plot_roc(fpr, tpr, roc_auc, cls):
+    plt.figure()
+    lw = 2
+    for c in range(cls):
+        plt.plot(fpr[c], tpr[c], color='darkorange',
+                lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[c])
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
     plt.show()

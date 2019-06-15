@@ -57,3 +57,28 @@ def tokenize(text, lang='en', lower_case=True, descape=False):
     text = " ".join(_moses_tokenize(text, lang))
 
     return text
+
+
+def tokenize_preproc(sentence, stemm=False, lemm=False):
+    """
+    Tokenizes a sentence and applies optionaly stemming and lemming
+
+    Args:
+        sentence (str): Sentence to tokenize
+        stemm (bool, optional): whether to apply stemming or not
+        lemm (bool, optional): whether to apply lemming or not
+
+    Returns:
+        list: of words
+    """
+    from nltk.tokenize import word_tokenize
+    words = word_tokenize(sentence)
+    if lemm:
+        from nltk.stem import WordNetLemmatizer
+        lemmatizer = WordNetLemmatizer()
+        words = [lemmatizer.lemmatize(x) for x in words]
+    if stemm:
+        from nltk.stem import SnowballStemmer
+        stemmer = SnowballStemmer("english")
+        words = [stemmer.stem(x) for x in words]
+    return words
