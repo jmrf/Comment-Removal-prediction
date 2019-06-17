@@ -88,16 +88,16 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
 
 def plot_training(clf, x, y):
 
-    title = "LASER Learning curves"
+    title = "Learning curves"
     plt = plot_learning_curve(clf, title, x, y,
                               ylim=(0.4, 1.01), cv=None, n_jobs=6)
     plt.show()
 
 
-def plot_roc(fpr, tpr, roc_auc, cls):
+def plot_roc(fpr, tpr, roc_auc, class_labels):
     plt.figure()
     lw = 2
-    for c in range(cls):
+    for c in class_labels:
         plt.plot(fpr[c], tpr[c], color='darkorange',
                  lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[c])
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
@@ -129,8 +129,15 @@ def plot_histogram(hist_data):
     plt.legend(['hits', 'misses'])
 
 
-def plot_confidence_historgram(y_labels, y_probs):
-    """ create histogram of confidence distribution and display """
+def plot_confidence_historgram(y_labels, y_probs, th=0.5):
+    """ create histogram of confidence distribution and display
+
+    Args:
+        y_labels (np.array): class labels, shape=(N,)
+        y_probs (np.array): softmax-like probabilities, shape=(N, n_classes)
+        th (float, optional): classification threshold to accept prediction.
+            Defaults to 0.5.
+    """
     plt.gcf().clear()
     pos_hist = [p[lbl]
                 for p, lbl in zip(y_probs, y_labels)

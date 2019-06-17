@@ -3,9 +3,13 @@
 This repo explores the `comment removal` prediction task using a
 sentence embedding mechanism followed by a classifier of choice.
 
-For example encoding the `reddit comments` using
-[LASER](https://github.com/facebookresearch/LASER) as inputs to different
+For example encoding the `reddit comments` using [LASER](https://github.com/facebookresearch/LASER) as inputs to different
 classifiers (`mlp`, `svm` or `random forest`).
+
+The focus is on assesing how different embedding choices affect the
+classification and little effort is on finding the best classifier or
+finetunning the parameters of the classifier.
+
 
 ## Dataset
 
@@ -19,20 +23,59 @@ Each comment is a top-level reply to the parent post and has a comment score of 
 
 The dataset comes from Google BigQuery, Reddit, and Pushshift.io.
 
+### Exploration
+
+In `scripts/expore_dataset.ipynb` there's an overview of the dataset,
+class counts, input lengths and a sentiment analysis from a small random sample
+grouped by label.
+
+The codebase tries to make little assumptions and not using any specific
+hand-crafted features but is helpful to understand the nature
+of the data at hand.
+
 ## Structure
 
 ```bash
-# tree -L 3 -I "*.pyc|*cache*|*init*"
+# tree -L 3 --dirsfirst -I "*.pyc|*cache*|*init*|*.npy|*.png|*.pkl"
 .
 ├── comment_removal
+│   ├── utils
+│   │   ├── batchers.py
+│   │   ├── loaders.py
+│   │   ├── metrics.py
+│   │   ├── mutils.py
+│   │   ├── plotting.py
+│   │   └── text_processing.py
+│   ├── encoders.py
+│   └── laser_classifier.py
 ├── data
-│   ├── reddit_test.csv.zip
-│   └── reddit_train.csv.zip
-├── requirements.txt
+│   ├── reddit_test.csv
+│   └── reddit_train.csv
+├── external
+│   ├── encoders
+│   │   └── laser.py
+│   ├── models
+│   │   └── LASER
+│   └── pyBPE
+│       ├── pybpe
+│       ├── CMakeLists.txt
+│       ├── fast
+│       ├── fast.cpp
+│       ├── LICENSE
+│       ├── README.md
+│       ├── requirements.txt
+│       └── setup.cfg
+├── results
+│   └── test_predictions.csv
 ├── scripts
-│   └── download_models.sh
-├── setup.cfg
-└── workdir
+│   └── explore_dataset.ipynb
+├── tests
+│   └── test_embeddings.py
+├── workdir
+├── README.md
+├── requirements.txt
+└── setup.cfg
+
 
 ```
 
@@ -46,9 +89,95 @@ First download the pretrained models and additional external code:
     ./scripts/init.sh
 ```
 
-And follow the instructions in `external/pyBPE` to install the `pyBPE` tool.
+Follow the instructions in `external/pyBPE` to install the `pyBPE` tool.
 
 Then, install the python dependencies:
 ```bash
     pip install -r requirements.txt
 ```
+
+### Run
+
+The codebase offers two choices of embeddings (`LASER`, `LSI`) and three
+choices of classifiers (`MLP`, `RandomForest`, `SVC`).
+
+#### Train
+
+Training a `MLP` classifier on `LASER`-encoded inputs:
+
+```bash
+    python -m comment_removal.laser_classifier train \
+            --encoder-type laser \
+            --clf-type mlp
+```
+
+#### Eval
+
+To evaluate one of the previously encoded inputs and trained models,
+for example `LSI`-encoded inputs and a `Randomforest` classifier:
+
+```bash
+    python -m comment_removal.laser_classifier eval \
+        --encoder-type LSI \
+        --clf-type randomforest \
+        --predictions-file LSI_randomforest_predictions.csv
+```
+
+
+### Results
+
+The codebase compares the following configurations:
+
+#### Embeddings:
+
+* [LSI](https://en.wikipedia.org/wiki/Latent_semantic_indexing):
+    - `keep_n` = 10000 words. Without filtering by frequency of appearance
+
+    - `num_topics`: Or number of latent dimensions:
+      Two configurations are tested: 300 and 1024.
+      Embeddings with 300 latent dimensions perform better but we chose to use
+      1024 too so we can compare by matching the dimensionality of the LASER-encoded
+      inputs and hence the classifier capacity.
+
+
+* [LASER](https://github.com/facebookresearch/LASER):
+    Using a BiLSTM trained on 93 langauges (see original repository).
+    Similarly we use the 93 language joint vocabulary and BPE codes.
+
+
+#### Clasifiers:
+
+* MLP:
+    - 3 hidden layers: (1024, 512, 128)
+    - ReLU activations units
+    - Trained with Adam optimizer
+    - Using Early stopping
+
+* RandomForest:
+    - Number of estimators: 1000
+    - Maximum depth: 100
+    - Max features: 100
+
+#### Comparison
+1024 dimensions `LSI` embeddings + MLP:
+![1024-LSI + MLP](results/LSI-1024_mlp_roc.png)
+
+`LASER` embeddings + MLP:
+![LASER + MLP](results/laser_mlp_roc.png)
+
+As can be seen using large pre-trained embedding models achieves similar performance as
+other baselines found in these
+[kaggle kernels](https://www.kaggle.com/areeves87/rscience-popular-comment-removal/kernels)
+whilst involving little training and no handcrafted feature extraction.
+**Note** that there's no lowercasing, word replacing or any other
+type of text processing other than tokenization and BPE encoding for `LASER` embeddings..
+
+
+## Limitations
+
+The following limitations are acknowledged:
+
+- Configuration flexibility for the embeddings and classifiers
+- Proper experimentation logging ([Sacred](https://github.com/IDSIA/sacred) or similar)
+- Unit testing
+- Code documentation and Typing

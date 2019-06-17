@@ -57,7 +57,9 @@ def make_classifier_and_predict(args, train_set, test_set,
 
     elif clf_name == "mlp":
         from sklearn.neural_network import MLPClassifier
-        clf = MLPClassifier(hidden_layer_sizes=(300, 100),
+
+        # TODO: Make MLP hidden layers automatic from input dim
+        clf = MLPClassifier(hidden_layer_sizes=(1024, 512, 128),
                             activation='relu',
                             early_stopping=True,
                             random_state=random_seed)
@@ -86,7 +88,7 @@ def encode_text(args, comments):
                                               parallel=args.parallel)
         elif args.encoder_type == 'LSI':
             from comment_removal.utils.text_processing import clean_text
-            encoder = LSIEncoder(keep_n=10000)
+            encoder = LSIEncoder(keep_n=10000, num_topics=1024)
             encoded_comments = encoder.fit_transform([
                 clean_text(comm)
                 for comm in comments
@@ -212,14 +214,18 @@ def eval_model(args, clf, x_test, y_test, target_names):
     logger.debug("Predictions: {}".format(y_pred.shape))
 
     # Calculate score and clasificatin report
+    # TODO: calculate weights for scoring function
     score = clf.score(x_test, y_test)
     logger.info("Test score: {}".format(score))
     print(classification_report(y_test, y_pred, target_names=target_names))
 
-    # ROC metrics
+    # ROC metrics:
     y_score = clf.predict_proba(x_test)
+    logger.debug("Prediction scores: {}".format(y_score.shape))
     plot_confidence_historgram(y_test, y_score)
-    compute_roc_curve(y_test, y_score)
+
+    # To compute the ROC curve we keep only p(removed)
+    compute_roc_curve(y_test, y_score[:, 1])
 
     # Save predictions as csv
     save_predictions(args, y_pred)
