@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve
 
+
 def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
                         n_jobs=None, train_sizes=np.linspace(.1, 1.0, 5)):
     """
@@ -98,7 +99,7 @@ def plot_roc(fpr, tpr, roc_auc, cls):
     lw = 2
     for c in range(cls):
         plt.plot(fpr[c], tpr[c], color='darkorange',
-                lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[c])
+                 lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[c])
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -106,4 +107,39 @@ def plot_roc(fpr, tpr, roc_auc, cls):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic example')
     plt.legend(loc="lower right")
+    plt.show()
+
+
+def plot_histogram(hist_data):
+    """Plot a histogram of the confidence distribution of the predictions in
+    two columns.
+    Wine-ish colour for the confidences of hits.
+    Blue-ish colour for the confidences of misses.
+    Saves the plot to a file."""
+
+    colors = ['#009292', '#920000']
+    bins = [0.05 * i for i in range(1, 21)]  # discretize in 20 bins
+
+    plt.xlim([0, 1])
+    plt.hist(hist_data, bins=bins, color=colors)
+    plt.xticks(bins)
+    plt.title('Prediction Confidence Distribution')
+    plt.xlabel('Confidence')
+    plt.ylabel('Number of Samples')
+    plt.legend(['hits', 'misses'])
+
+
+def plot_confidence_historgram(y_labels, y_probs):
+    """ create histogram of confidence distribution and display """
+    plt.gcf().clear()
+    pos_hist = [p[lbl]
+                for p, lbl in zip(y_probs, y_labels)
+                if np.argmax(p) == lbl]
+
+    neg_hist = [np.max(p)
+                for p, lbl in zip(y_probs, y_labels)
+                if np.argmax(p) != lbl]
+
+    plot_histogram([pos_hist, neg_hist])
+
     plt.show()

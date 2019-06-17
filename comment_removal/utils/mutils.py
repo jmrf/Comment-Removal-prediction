@@ -1,11 +1,9 @@
-import logging
 import os
+import logging
 import numpy as np
 
-from comment_removal.utils import (timeit,
-                                   configure_colored_logging)
+from comment_removal.utils import timeit
 from comment_removal.utils.loaders import read_csv
-from comment_removal.utils.plotting import plot_training
 from comment_removal.encoders import LaserEncoder, LSIEncoder
 
 
@@ -16,7 +14,7 @@ def save_model(args, clf):
     from sklearn.externals import joblib
 
     save_path = os.path.join(
-        args.workdir, "{}_{}.pkl".format(args.clf_save_name, args.clf_type))
+        args.workdir, "{}_{}.pkl".format(args.encoder_type, args.clf_type))
     joblib.dump(clf, save_path)
 
 
@@ -24,7 +22,7 @@ def load_model(args):
     from sklearn.externals import joblib
 
     save_path = os.path.join(
-        args.workdir, "{}_{}.pkl".format(args.clf_save_name, args.clf_type))
+        args.workdir, "{}_{}.pkl".format(args.encoder_type, args.clf_type))
     return joblib.load(save_path)
 
 
@@ -32,6 +30,9 @@ def load_model(args):
 def make_classifier_and_predict(args, train_set, test_set,
                                 target_names, random_seed,
                                 clf_name="randomforest"):
+
+    from comment_removal.utils.plotting import plot_training
+
     # Data
     x_train, y_train = train_set
     x_test, y_test = test_set
@@ -51,11 +52,12 @@ def make_classifier_and_predict(args, train_set, test_set,
                                      verbose=True)
     elif clf_name == "svc":
         from sklearn.svm import SVC
-        clf = SVC(gamma='auto', random_state=random_seed, verbose=True)
+        clf = SVC(gamma='auto', probabilities=True,
+                  random_state=random_seed, verbose=True)
 
     elif clf_name == "mlp":
         from sklearn.neural_network import MLPClassifier
-        clf = MLPClassifier(hidden_layer_sizes=(512, 128),
+        clf = MLPClassifier(hidden_layer_sizes=(300, 100),
                             activation='relu',
                             early_stopping=True,
                             random_state=random_seed)
@@ -83,8 +85,12 @@ def encode_text(args, comments):
             encoded_comments = encoder.encode(comments,
                                               parallel=args.parallel)
         elif args.encoder_type == 'LSI':
+            from comment_removal.utils.text_processing import clean_text
             encoder = LSIEncoder(keep_n=10000)
-            encoded_comments = encoder.fit_transform(comments)
+            encoded_comments = encoder.fit_transform([
+                clean_text(comm)
+                for comm in comments
+            ])
 
         logger.info("Comments encoded: {}".format(encoded_comments.shape))
         return encoded_comments
@@ -188,48 +194,19 @@ def encode_or_load_data(args, data_loader):
 
 
 def save_predictions(args, y_pred):
-    import copy
-
     gold = read_csv(args.test_file)[['BODY', 'REMOVED']]
-    pred = copy.deepcopy(gold)
-
-    for i, y_lbl in enumerate(y_pred):
-        pred.iloc[i]['Prediction'] = y_lbl
+    pred = gold.copy(deep=True)
+    pred['Prediction'] = y_pred
 
     pred.to_csv(args.predictions_file,
                 sep='\t', index=True, index_label='ID')
 
 
-def roc_curve(y_test, y_score, n_classes=2):
-    from sklearn.metrics import roc_auc_score, roc_curve, auc
-    from comment_removal.utils.plotting import plot_roc
-
-    y_test_ = np.zeros((y_test.shape[0], 2))
-    y_test_[y_test] = 1
-
-    roc_score = roc_auc_score(y_test, np.max(y_score, axis=1))
-    logger.info("ROC AUC score: {}".format(roc_score))
-
-    # Compute ROC curve and ROC area for each class
-    fpr = {}
-    tpr = {}
-    roc_auc = {}
-    for i in range(n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_test_[:, i], y_score[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
-
-    # Compute micro-average ROC curve and ROC area
-    fpr["micro"], tpr["micro"], _ = roc_curve(y_test_.ravel(), y_score.ravel())
-    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
-
-    plot_roc(fpr, tpr, roc_auc, cls=2)
-
-
-
-
 @timeit
 def eval_model(args, clf, x_test, y_test, target_names):
     from sklearn.metrics import classification_report
+    from comment_removal.utils.metrics import compute_roc_curve
+    from comment_removal.utils.plotting import plot_confidence_historgram
 
     y_pred = clf.predict(x_test)
     logger.debug("Predictions: {}".format(y_pred.shape))
@@ -241,7 +218,8 @@ def eval_model(args, clf, x_test, y_test, target_names):
 
     # ROC metrics
     y_score = clf.predict_proba(x_test)
-    roc_curve(y_test, y_score)
+    plot_confidence_historgram(y_test, y_score)
+    compute_roc_curve(y_test, y_score)
 
     # Save predictions as csv
     save_predictions(args, y_pred)

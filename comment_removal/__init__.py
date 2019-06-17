@@ -19,6 +19,9 @@ def build_arg_parser():
     input_group.add_argument('--test-file',
                              default="./data/reddit_test.csv",
                              help='CSV test input file')
+    input_group.add_argument('--predictions-file',
+                             default="./results/test_predictions.csv",
+                             help='CSV test output file')
     input_group.add_argument('--workdir', default="./workdir",
                              help='temporary work directory')
 
@@ -52,8 +55,6 @@ def build_arg_parser():
 
     # Add classifier options
     classifier_group = parser.add_argument_group('Classifier options')
-    classifier_group.add_argument('--clf-save-name', default='laser',
-                                  help="Name to save the classifier")
     classifier_group.add_argument('--clf-type', default='mlp',
                                   help=('Classifer type to use: '
                                         '{mlp, randomforest, svc}'))
