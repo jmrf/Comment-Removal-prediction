@@ -3,7 +3,7 @@
 import numpy as np
 
 from external.pyBPE.pybpe.pybpe import pyBPE
-from external.encoders.laser import EncodeLoad
+from external.models.laser import EncodeLoad
 from comment_removal.utils.loaders import RedditDataLoader
 from comment_removal.utils.text_processing import (tokenize,
                                                    remove_non_printable,

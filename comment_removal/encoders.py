@@ -142,7 +142,7 @@ class LaserEncoder():
 
         # TODO: Currently the external Laser lib. requires an args object.
         #       Change for explicit parameters!
-        from external.encoders.laser import EncodeLoad
+        from external.models.laser import EncodeLoad
 
         # configure path from 'args'
         self.workdir = args.workdir

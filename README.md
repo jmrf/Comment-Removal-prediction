@@ -11,6 +11,9 @@ The focus is on assesing how different embedding choices affect the
 classification and little effort is on finding the best classifier or
 finetunning the parameters of the classifier.
 
+Additionally the [transformer]() language model with a clasifier head
+is also explored.
+
 
 ## Dataset
 
@@ -48,24 +51,18 @@ of the data at hand.
 │   │   ├── plotting.py
 │   │   └── text_processing.py
 │   ├── encoders.py
-│   └── laser_classifier.py
+│   ├── laser_classifier.py
+│   └── transformer_classifier.py
 ├── data
 │   ├── reddit_test.csv
 │   └── reddit_train.csv
-├── external
-│   ├── encoders
-│   │   └── laser.py
+├── external    # external model checkpoints and modified model definitions
 │   ├── models
-│   │   └── LASER
-│   └── pyBPE
-│       ├── pybpe
-│       ├── CMakeLists.txt
-│       ├── fast
-│       ├── fast.cpp
-│       ├── LICENSE
-│       ├── README.md
-│       ├── requirements.txt
-│       └── setup.cfg
+│   │   ├── LASER           # LASER encoder checkpoints
+│   │   ├── transformer     # openAI Transformer checkpoints
+│   │   ├── laser.py        # extended LASER model definition
+│   │   └── transformer.py  # extended Transformer model definition
+│   └── pyBPE   # BPE encoding codebase dependency for LASER encoding
 ├── results
 │   └── test_predictions.csv
 ├── scripts
@@ -78,6 +75,7 @@ of the data at hand.
 └── setup.cfg
 
 
+
 ```
 
 ## How To
@@ -85,6 +83,7 @@ of the data at hand.
 
 ### Installation
 
+#### LASER encoder
 First download the pretrained models and additional external code:
 ```bash
     ./scripts/init.sh
@@ -96,6 +95,13 @@ Then, install the python dependencies:
 ```bash
     pip install -r requirements.txt
 ```
+
+#### Transformer model
+
+1. Download the [pre-trained weights](https://github.com/openai/finetune-transformer-lm/tree/master/model)
+and copy every file in `external/models/transformer`
+
+2. Copy the [parameter names json file](https://github.com/huggingface/pytorch-openai-transformer-lm/blob/master/parameters_names.json) in `external/models/transformer`
 
 ### Run
 
@@ -111,6 +117,13 @@ Training a `MLP` classifier on `LASER`-encoded inputs:
             --encoder-type laser \
             --clf-type mlp
 ```
+
+To train the `transformer` model:
+```bash
+    python -m comment_removal.transformer train
+```
+This uses the [pre-trained weights](https://github.com/openai/finetune-transformer-lm/tree/master/model)
+from openAI implementation loaded into a PyTorch implementation of the model.
 
 #### Eval
 
