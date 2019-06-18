@@ -3,7 +3,8 @@
 This repo explores the `comment removal` prediction task using a
 sentence embedding mechanism followed by a classifier of choice.
 
-For example encoding the `reddit comments` using [LASER](https://github.com/facebookresearch/LASER) as inputs to different
+For example encoding the `reddit comments` using
+[LASER](https://github.com/facebookresearch/LASER) as inputs to different
 classifiers (`mlp`, `svm` or `random forest`).
 
 The focus is on assesing how different embedding choices affect the
