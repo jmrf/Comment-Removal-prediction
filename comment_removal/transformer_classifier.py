@@ -76,14 +76,15 @@ def encode_dataset(args, data_loader, text_encoder, split):
     return inputs, labels
 
 
-def run_epoch(model, dataset, device):
+def run_epoch(args, model, dataset, device):
     global n_updates
     loss = 0
 
     train_x, train_y = dataset
     assert len(train_x) == len(train_y)
 
-    dataset_it = tqdm(zip(chunk(train_x, 4), chunk(train_y, 4)))
+    dataset_it = tqdm(zip(chunk(train_x, args.n_batch),
+                          chunk(train_y, args.n_batch)))
     for i, batch in enumerate(dataset_it):
         dataset_it.set_description("Batch {}".format(i))
         # send batch to appropiate device
@@ -97,6 +98,20 @@ def run_epoch(model, dataset, device):
         n_updates += 1
 
     return loss / i
+
+
+def run_batched_prediction(args, model, test_x, device):
+    model.eval()
+    model.to(device)
+    preds = []
+    for i, x_batch in enumerate(chunk(test_x, args.n_batch)):
+        logger.debug("Pred on batch {}".format(i))
+        with torch.no_grad():
+            preds.extend(torch.nn.functional.softmax(
+                model(torch.tensor(x_batch, dtype=torch.long).to(device))
+            ).data.cpu().numpy())
+
+    return np.stack(preds)
 
 
 def get_args():

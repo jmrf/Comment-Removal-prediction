@@ -13,8 +13,6 @@ from comment_removal.utils.text_processing import (tokenize,
                                                    normalize_punct,
                                                    get_pairs,
                                                    text_standardize)
-# TODO: FIX the pyBPE path mess!
-from external.pyBPE.pybpe.pybpe import pyBPE
 
 
 logger = logging.getLogger(__name__)
@@ -149,6 +147,9 @@ class LaserEncoder():
         # TODO: Currently the external Laser lib. requires an args object.
         #       Change for explicit parameters!
         from external.models.laser import EncodeLoad
+
+        # TODO: FIX the pyBPE path mess!
+        from external.pyBPE.pybpe.pybpe import pyBPE
 
         # configure path from 'args'
         self.workdir = args.workdir
