@@ -56,40 +56,6 @@ of the data at hand.
 ├── data
 │   ├── reddit_test.csv
 │   └── reddit_train.csv
-├── external    # external model checkpoints and modified model definitions
-│   ├── models
-│   │   ├── LASER           # LASER encoder checkpoints
-│   │   ├── transformer     # openAI Transformer checkpoints
-│   │   ├── laser.py        # extended LASER model definition
-│   │   └── transformer.py  # extended Transformer model definition
-│   └── pyBPE   # BPE encoding codebase dependency for LASER encoding
-├── results
-│   └── test_predictions.csv
-├── scripts
-│   └── explore_dataset.ipynb
-├── tests
-│   └── test_embeddings.py
-├── workdir
-├── README.md
-├── requirements.txt
-└── setup.cfg
-
-
-.
-├── comment_removal
-│   ├── utils
-│   │   ├── batchers.py
-│   │   ├── loaders.py
-│   │   ├── metrics.py
-│   │   ├── mutils.py
-│   │   ├── plotting.py
-│   │   └── text_processing.py
-│   ├── encoders.py
-│   ├── laser_classifier.py
-│   └── transformer_classifier.py
-├── data
-│   ├── reddit_test.csv
-│   └── reddit_train.csv
 ├── external        # external model checkpoints and modified model definitions
 │   ├── models
 │   │   ├── LASER           # LASER encoder checkpoints
