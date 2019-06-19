@@ -1,14 +1,16 @@
+import torch
 import random
 import numpy as np
-import torch
 from tqdm import tqdm
 
 from comment_removal import build_arg_parser, logger
 from comment_removal.encoders import TextEncoder
 from comment_removal.utils.loaders import RedditDataLoader
-from comment_removal.utils import configure_colored_logging, chunk
+from comment_removal.utils import (configure_colored_logging,
+                                   chunk, parallel_shuffle)
 from external.models.transformer import (ClassifierModel,
-                                         DEFAULT_CONFIG)
+                                         DEFAULT_CONFIG,
+                                         dotdict)
 
 
 def freeze_seeds(args):
@@ -44,9 +46,12 @@ def build_model(args, clf_token, device,
     return model
 
 
-def encode_dataset(args, data_loader, text_encoder, split):
+def encode_dataset(args, data_loader, text_encoder, split, lim=10000):
+    x, y = parallel_shuffle(data_loader.get('BODY', split),
+                            data_loader.get('REMOVED', split))
+
     # Encode inputs (comments)
-    x_encoded = text_encoder.encode(data_loader.get('BODY', split)[:50])
+    x_encoded = text_encoder.encode(x[:lim])
 
     # Padding
     N = len(x_encoded)
@@ -69,8 +74,7 @@ def encode_dataset(args, data_loader, text_encoder, split):
                                 n_vocab + args.n_ctx)
 
     # Encode labels
-    labels = np.array(data_loader.get('REMOVED', split)[:50])
-
+    labels = np.array(y[:lim])
     logger.debug("Inputs shape: {} | "
                  "labels shape: {}".format(inputs.shape, labels.shape))
     return inputs, labels
@@ -83,17 +87,15 @@ def run_epoch(args, model, dataset, device):
     train_x, train_y = dataset
     assert len(train_x) == len(train_y)
 
-    dataset_it = tqdm(zip(chunk(train_x, args.n_batch),
-                          chunk(train_y, args.n_batch)))
-    for i, batch in enumerate(dataset_it):
-        dataset_it.set_description("Batch {}".format(i))
+    for i, batch in tqdm(enumerate(zip(chunk(train_x, args.n_batch),
+                                       chunk(train_y, args.n_batch)))):
         # send batch to appropiate device
         x_batch, y_batch = batch
-        x = torch.tensor(x_batch, dtype=torch.long).to(device)
-        y = torch.tensor(y_batch, dtype=torch.long).to(device)
         # set model in training mode
         model.train()
-        loss += model.train_batch(x, y)
+        loss += model.train_batch(
+            torch.tensor(x_batch, dtype=torch.long).to(device),
+            torch.tensor(y_batch, dtype=torch.long).to(device))
         # update counter
         n_updates += 1
 
@@ -112,6 +114,26 @@ def run_batched_prediction(args, model, test_x, device):
             ).data.cpu().numpy())
 
     return np.stack(preds)
+
+
+def eval_model(args, y_test, y_scores, target_names):
+    from sklearn.metrics import classification_report
+    from comment_removal.utils.metrics import compute_roc_curve
+    from comment_removal.utils.plotting import plot_confidence_historgram
+
+    logger.debug("Prediction probs shape: {}".format(y_scores.shape))
+
+    # Calculate score and clasificatin report
+    # TODO: calculate weights for scoring function
+    y_pred = np.argmax(y_scores, axis=1)
+    print(classification_report(y_test, y_pred, target_names=target_names))
+
+    # ROC metrics:
+    logger.debug("Prediction scores: {}".format(y_scores.shape))
+    plot_confidence_historgram(y_test, y_scores)
+
+    # To compute the ROC curve we keep only p(removed)
+    compute_roc_curve(y_test, y_scores[:, 1])
 
 
 def get_args():
@@ -200,3 +222,9 @@ if __name__ == '__main__':
                                          "loss: {:.3f}".format(i, loss))
 
                 n_epochs += 1
+
+        # predict on the test data
+        preds = run_batched_prediction(args, model, test_x, device)
+
+        # evaluation
+        eval_model(args, test_y, preds, ['kept', 'removed'])
