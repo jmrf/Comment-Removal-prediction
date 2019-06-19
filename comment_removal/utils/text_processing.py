@@ -1,4 +1,5 @@
 import string
+import re
 
 
 def remove_non_printable(text):
@@ -156,3 +157,32 @@ def clean_text(text, remove_stopwords=True, remove_punct=True, stem_words=False)
 
     # Return a list of words
     return text
+
+
+def get_pairs(word):
+    """
+    Return set of symbol pairs in a word.
+    word is represented as tuple of symbols (symbols being variable-length strings)
+    """
+    pairs = set()
+    prev_char = word[0]
+    for char in word[1:]:
+        pairs.add((prev_char, char))
+        prev_char = char
+    return pairs
+
+
+def text_standardize(text):
+    """
+    fixes some issues the spacy tokenizer had on books corpus
+    also does some whitespace standardization
+    """
+    text = text.replace('—', '-')
+    text = text.replace('–', '-')
+    text = text.replace('―', '-')
+    text = text.replace('…', '...')
+    text = text.replace('´', "'")
+    text = re.sub(r'''(-+|~+|!+|"+|;+|\?+|\++|,+|\)+|\(+|\\+|\/+|\*+|\[+|\]+|}+|{+|\|+|_+)''', r' \1 ', text)
+    text = re.sub(r'\s*\n\s*', ' \n ', text)
+    text = re.sub(r'[^\S\n]+', ' ', text)
+    return text.strip()

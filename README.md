@@ -11,6 +11,9 @@ The focus is on assesing how different embedding choices affect the
 classification and little effort is on finding the best classifier or
 finetunning the parameters of the classifier.
 
+Additionally the [transformer]() language model with a clasifier head
+is also explored.
+
 
 ## Dataset
 
@@ -48,27 +51,23 @@ of the data at hand.
 │   │   ├── plotting.py
 │   │   └── text_processing.py
 │   ├── encoders.py
-│   └── laser_classifier.py
+│   ├── laser_classifier.py
+│   └── transformer_classifier.py
 ├── data
 │   ├── reddit_test.csv
 │   └── reddit_train.csv
-├── external
-│   ├── encoders
-│   │   └── laser.py
+├── external        # external model checkpoints and modified model definitions
 │   ├── models
-│   │   └── LASER
-│   └── pyBPE
-│       ├── pybpe
-│       ├── CMakeLists.txt
-│       ├── fast
-│       ├── fast.cpp
-│       ├── LICENSE
-│       ├── README.md
-│       ├── requirements.txt
-│       └── setup.cfg
+│   │   ├── LASER           # LASER encoder checkpoints
+│   │   ├── transformer     # openAI Transformer checkpoints
+│   │   ├── laser.py        # extended LASER model definition
+│   │   └── transformer.py  # extended Transformer model definition
+│   └── pyBPE          # BPE encoding codebase dependency for LASER encoding
 ├── results
 │   └── test_predictions.csv
 ├── scripts
+│   ├── init_LASER.sh           # Download pyBPE and LASER weights
+│   ├── init_transformer.sh     # Download Transformer weights
 │   └── explore_dataset.ipynb
 ├── tests
 │   └── test_embeddings.py
@@ -76,8 +75,6 @@ of the data at hand.
 ├── README.md
 ├── requirements.txt
 └── setup.cfg
-
-
 ```
 
 ## How To
@@ -85,9 +82,10 @@ of the data at hand.
 
 ### Installation
 
+#### LASER encoder
 First download the pretrained models and additional external code:
 ```bash
-    ./scripts/init.sh
+    ./scripts/init_LASER.sh
 ```
 
 Follow the instructions in `external/pyBPE` to install the `pyBPE` tool.
@@ -97,10 +95,19 @@ Then, install the python dependencies:
     pip install -r requirements.txt
 ```
 
+#### Transformer model
+
+Download the [pre-trained weights](https://github.com/openai/finetune-transformer-lm/tree/master/model):
+```bash
+    ./scripts/init_transformer.sh
+```
+
 ### Run
 
-The codebase offers two choices of embeddings (`LASER`, `LSI`) and three
-choices of classifiers (`MLP`, `RandomForest`, `SVC`).
+The codebase offers two choices:
+
+1. Embeddings (`LASER`, `LSI`) + a choice of classifiers (`MLP`, `RandomForest`, `SVC`).
+2. Transformer model
 
 #### Train
 
@@ -111,6 +118,17 @@ Training a `MLP` classifier on `LASER`-encoded inputs:
             --encoder-type laser \
             --clf-type mlp
 ```
+
+Train the `transformer` model:
+```bash
+    python -m comment_removal.transformer train
+```
+
+Alternatively you can open the [ipython notebook](Comment_Removal_Transofrmer.ipynb)
+in colab, which is recommended as it is self contained and benefits from GPU acceleration.
+
+This uses the [pre-trained weights](https://github.com/openai/finetune-transformer-lm/tree/master/model)
+from openAI implementation loaded into a PyTorch implementation of the model.
 
 #### Eval
 

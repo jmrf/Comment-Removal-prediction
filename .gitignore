@@ -2,7 +2,6 @@
 .cache/
 .hypothesis/
 __pycache__/
-external/
 
 *.pyc
 *.npy
