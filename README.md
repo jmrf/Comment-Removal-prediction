@@ -111,7 +111,7 @@ The codebase offers two choices:
 
 #### Train
 
-Training a `MLP` classifier on `LASER`-encoded inputs:
+- Training a `MLP` classifier on `LASER`-encoded inputs:
 
 ```bash
     python -m comment_removal.laser_classifier train \
@@ -119,7 +119,20 @@ Training a `MLP` classifier on `LASER`-encoded inputs:
             --clf-type mlp
 ```
 
-Train the `transformer` model:
+If you prefer to skip encoding and training, pre-trained models are available.
+More specifically:
+- `LASER-encoded` inputs + `RandomForest`
+- `LASER-encoded` inputs + `MLP`
+- `300 dimensional LSI-encoded` inputs + `RandomForest`
+- `300 dimensional LSI-encoded` inputs + `MLP`
+
+To download the above:
+```bash
+    ./scripts/download_LASER_classifiers.sh
+```
+
+
+- Training the `transformer` model:
 ```bash
     python -m comment_removal.transformer train
 ```
@@ -133,14 +146,16 @@ from openAI implementation loaded into a PyTorch implementation of the model.
 #### Eval
 
 To evaluate one of the previously encoded inputs and trained models,
-for example `LSI`-encoded inputs and a `Randomforest` classifier:
+for example `LASER`-encoded inputs and a `Randomforest` classifier:
 
 ```bash
     python -m comment_removal.laser_classifier eval \
-        --encoder-type LSI \
+        --encoder-type laser \
         --clf-type randomforest \
-        --predictions-file LSI_randomforest_predictions.csv
+        --predictions-file results/LASER_randomforest_predictions.csv
 ```
+This will try to load the encoded inputs from `workdir/test_laser-comments.npy`
+and the model from `workdir/laser_randomforest.npy`
 
 
 ### Results
@@ -152,12 +167,12 @@ The codebase compares the following configurations:
 * [LSI](https://en.wikipedia.org/wiki/Latent_semantic_indexing):
     - `keep_n` = 10000 words. Without filtering by frequency of appearance
 
-    - `num_topics`: Or number of latent dimensions:
+    - `num_topics`: aka number of latent dimensions:
       Two configurations are tested: 300 and 1024.
-      Embeddings with 300 latent dimensions perform better but we chose to use
-      1024 too so we can compare by matching the dimensionality of the LASER-encoded
-      inputs and hence the classifier capacity.
-
+      Embeddings with 300 latent dimensions perform better but we test with
+      1024 too just so we can compare by matching the dimensionality
+      of the LASER-encoded inputs and hence the classifier capacity.
+      We use the LSI 300 dimensional embeddings as baseline.
 
 * [LASER](https://github.com/facebookresearch/LASER):
     Using a BiLSTM trained on 93 langauges (see original repository).

@@ -14,7 +14,7 @@ def get_args():
 
     # Add encoder options
     encoder_group = parser.add_argument_group('Encoder Options')
-    encoder_group.add_argument('--encoder-type', default="LSI")
+    encoder_group.add_argument('--encoder-type', default="laser")
     encoder_group.add_argument('--encoder', type=str,
                                default=("./external/models/LASER"
                                         "/bilstm.93langs.2018-12-26.pt"),

@@ -88,7 +88,7 @@ def encode_text(args, comments):
                                               parallel=args.parallel)
         elif args.encoder_type == 'LSI':
             from comment_removal.utils.text_processing import clean_text
-            encoder = LSIEncoder(keep_n=10000, num_topics=1024)
+            encoder = LSIEncoder(keep_n=10000, num_topics=300)
             encoded_comments = encoder.fit_transform([
                 clean_text(comm)
                 for comm in comments
