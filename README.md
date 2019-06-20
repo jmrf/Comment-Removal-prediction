@@ -196,6 +196,9 @@ The codebase compares the following configurations:
 1024 dimensions `LSI` embeddings + MLP:
 ![1024-LSI + MLP](results/LSI-1024_mlp_roc.png)
 
+300 dimensions `LSI` embeddings + MLP:
+![300-LSI + MLP](results/LSI_mlp_roc.png)
+
 `LASER` embeddings + MLP:
 ![LASER + MLP](results/laser_mlp_roc.png)
 
