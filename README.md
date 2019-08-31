@@ -1,5 +1,7 @@
 # Comment removal
 
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjmrf%2FComment-Removal-prediction.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjmrf%2FComment-Removal-prediction?ref=badge_shield)
+
 This repo explores the `comment removal` prediction task using a
 sentence embedding mechanism followed by a classifier of choice.
 
