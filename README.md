@@ -197,6 +197,7 @@ The codebase compares the following configurations:
 #### Comparison
 1024 dimensions `LSI` embeddings + MLP:
 ![1024-LSI + MLP](results/LSI-1024_mlp_roc.png)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjmrf%2FComment-Removal-prediction.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjmrf%2FComment-Removal-prediction?ref=badge_shield)
 
 300 dimensions `LSI` embeddings + MLP:
 ![300-LSI + MLP](results/LSI_mlp_roc.png)
@@ -220,3 +221,7 @@ The following limitations are acknowledged:
 - Proper experimentation logging ([Sacred](https://github.com/IDSIA/sacred) or similar)
 - Unit testing
 - Code documentation and Typing
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjmrf%2FComment-Removal-prediction.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjmrf%2FComment-Removal-prediction?ref=badge_large)
