@@ -1,7 +1,7 @@
 matplotlib==2.2.3
 pandas==0.22.0
 numpy==1.13.0
-tqdm==4.28.1
+tqdm==4.66.3
 pytest==3.3.2
 coloredlogs==10.0
 ftfy==5.5.1
